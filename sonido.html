@@ -1,0 +1,16 @@
+<audio id="sonido" controls autoplay></audio>
+<script type="application/x-javascript">
+        sonido = document.getElementById("sonido");
+        
+        function actualizar() {
+            // Evitamos el cache
+            sonido.setAttribute('preload', 'none');
+            sonido.setAttribute('src', '/test.ogg?' + new Date().getTime());
+            console.log("Actualización");
+        }
+        
+        actualizar();
+        
+        // Actualizar cada minuto
+        window.setInterval(actualizar, 60000);
+</script>
