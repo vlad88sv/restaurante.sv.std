@@ -89,6 +89,12 @@ input[type=checkbox]
   padding: 0px;
 }
 
+input[type=checkbox]:focus
+{
+    border: 1px solid red;
+    outline:5px solid red;
+}
+
 ul {
     padding-left:20px;
 }
@@ -241,7 +247,7 @@ ul {
     cursor: pointer;
 }
 
-.agregar_producto:hover {
+.agregar_producto:hover, .agregar_producto:focus {
     color: yellow;
 }
 
@@ -325,5 +331,5 @@ div.pedido:before {
 }
 
 .pulso {
-  animation: pulse 1s ease-out 15;
+  animation: pulse 1s ease-out 5;
 }

@@ -1,3 +1,0 @@
-// Chris Richards 2009
-// http://zensoftware.org/
-jQuery.fn.serializeForm=function(){var e={};this.each(function(){jQuery("input, select, textarea",this).each(function(){var a=jQuery(this);var b=a.attr("id");b=""!=b?b:a.attr("name");var c=a.val();var d=a.attr("type");if("checkbox"==d){if(this.checked){e[b]="true"}else{e[b]="false"}}else if("radio"==d){if(this.checked){e[b]=c}}else{if(!b.match(/__.+/)){if(e[b]===undefined){if("textarea"==d){e[b]=encodeURIComponent(c)}else{e[b]=c}}else{e[b]+=","+encodeURIComponent(c)}}}})});return e};

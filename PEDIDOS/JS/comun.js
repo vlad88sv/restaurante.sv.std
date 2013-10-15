@@ -42,13 +42,7 @@ $(function(){
     $.expr[':'].icontains = function (n, i, m) {
         return jQuery(n).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0;
     };
-    
-    $("#borrar_orden").click(function(){
-        if (confirm('¿Desea borrar por completo esta orden?')) {
-            window.location = '/PEDIDOS/';
-        }
-    });
-    
+        
     $('.facebox_cerrar').live('click',function(){
         $("#scroller").show();
         $.modal.close();
