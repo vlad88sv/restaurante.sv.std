@@ -38,8 +38,6 @@ function timeSince(date) {
     if (interval > 1) {
         return interval + " m";
     }
-    
-    seconds = Math.max(seconds, 0);
     return Math.floor(seconds) + " s";
 }
 
@@ -55,7 +53,7 @@ function cocina_agregarPedido(grupo)
     
     // Ghost in the shell
     
-    if (_ordenes[grupo][0].flag_despachado == 1)
+    if (_ordenes[grupo][0].flag_elaborado == 1)
     {
 	orden.addClass('ghost');
 	orden.find('.tiempo').html('Entregada hace ' + timeSince(new Date(_ordenes[grupo][0].fechahora_entregado_uts*1000)));
@@ -67,9 +65,10 @@ function cocina_agregarPedido(grupo)
     var pedidos = orden.find('.pedidos');
     
     // Si lleva más de 15m esperando
-    if (_ordenes[grupo][0].flag_despachado == 0 && Math.floor((new Date() - new Date(_ordenes[grupo][0].fechahora_pedido_uts*1000)) / 1000) > 900)
+    if (_ordenes[grupo][0].flag_elaborado == 0 && Math.floor((new Date() - new Date(_ordenes[grupo][0].fechahora_pedido_uts*1000)) / 1000) > 900)
     {
 	orden.toggleClass('mucho_tiempo', bool_mucho_tiempo);
+        Beep();
     }
     
 

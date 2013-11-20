@@ -7,17 +7,14 @@
 <?php $_html['titulo'] = 'Caja'; ?>
 <div id="menu" style="z-index:555;padding-left:40px;height:32px;line-height:32px;background-color: grey; position:fixed;left:0px;right:0px;border:2px solid white;display:none;">
     <div>
+    Mesa: <input id="id_mesa" type="text" value="" style="width:2em;" />&nbsp;
     <input type="text" style="width:100px;" readonly="readonly" value="<?php echo date('Y-m-d'); ?>" id="fecha_caja" />&nbsp;
-    <button class="btn" id="ver_historial">Historial</button>&nbsp;
-    <button class="btn" id="ver_total">Corte Z</button>&nbsp;
-    <button class="btn" id="inventario">Inventario</button>&nbsp;
-    <button class="btn" id="compras">Compras</button>&nbsp;
-    <button class="btn" id="historial_cortez" style="display:none;">H. Cortes</button>&nbsp;
-    <button class="btn" id="cortes" style="display:none;">Cortes</button>&nbsp;
-    |&nbsp;
-    <input type="checkbox" style="vertical-align: middle;" class="vaciar_cache_caja" id="ocultar_fechas" value="1" /><label for="ocultar_fechas">Ocultar horas</label>&nbsp;
-    <input type="checkbox" style="vertical-align: middle;" class="vaciar_cache_caja" id="cuentas_compactas" value="1" /><label for="cuentas_compactas">Cuentas compactas</label>
-    <input type="checkbox" style="vertical-align: middle;" id="habilitar_facturin" value="1" /><label for="habilitar_facturin">Facturin</label>
+    <button id="ver_historial">Historial</button>&nbsp;
+    <button id="ver_total">Ver total del día</button>&nbsp;
+    <button id="inventario">Inventario</button>&nbsp;
+    <button id="compras">Compras</button>&nbsp;
+    <button id="historial_cortez" style="display:none;">Tabla Cortes</button>&nbsp;
+    <button id="cortes" style="display:none;">Cortes</button>&nbsp;
     </div>
 </div>
 <img src="IMG/gear.png" id="mostrar_opciones" style="background-color: grey;border:2px solid white;position:fixed;top:0px;left:0px;z-index:999;" />
@@ -27,9 +24,8 @@
         <h1>
             CUENTAS ABIERTAS&nbsp;
             [
-            &nbsp;Mesa: <input autocomplete="off" id="id_mesa" type="text" value="" style="width:3.5em;" />&nbsp;
-            <button id="btn_rapido_cuenta_tiquete" class="btn">Tiquete</button>&nbsp;
-            <button id="btn_rapido_cuenta_cerrar" class="btn">Cerrar</button>&nbsp;
+            <input type="checkbox" style="vertical-align: middle;" id="ocultar_fechas" value="1" /><label for="ocultar_fechas">Ocultar horas</label>&nbsp;
+            <input type="checkbox" style="vertical-align: middle;" id="cuentas_compactas" value="1" /><label for="cuentas_compactas">Cuentas compactas</label>
             ]
 
         </h1><hr />
@@ -43,8 +39,10 @@
 </table>
 <div style="background: grey;border-top: 2px solid whitesmoke;color: black;z-index: 99;position: fixed;bottom: 0;line-height: 20px;left: 0px;right: 0px;font-family: monospace;font-size:12px;">
     <span title="Distrubición de Servicio Normalizado" style="font-weight:bold;">DSN</span>: <span id="dsn"></span>
-    <br />
+    &nbsp;|&nbsp;
     <span title="Tiempo Promedio de Servicio" style="font-weight:bold;">TPS</span>: <span id="tps"></span>
     &nbsp;|&nbsp;
     <span title="Tiempo Máximo de Servicio" style="font-weight:bold;">TMS</span>: <span id="tms"></span>
+    &nbsp;|&nbsp;
+    <span title="Promedio de muestra de sonido ambiental" style="font-weight:bold;">RMS</span>: <span id="sonido"></span>
 </div>

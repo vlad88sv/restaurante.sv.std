@@ -1,12 +1,24 @@
-_t_id_pedido = 0; // Variable donde se almacena temporalmente el ID de pedido en edición
+_t_id_pedido = 0; // Variable donde se almacena temporalmente el ID de pedido en ediciÃ³n
 keys = {};
 menu_visible = false;
-cmp_cache = {}; // objeto donde almacenamos la última actualización real
+cmp_cache = {} // objeto donde almacenamos la Ãºltima actualizaciÃ³n real
 
+function alarmaSonido() {
+    
+    if(typeof(Storage)=="undefined") return;
+
+    if (new Date().getTime() > (localStorage.alarmaSonido || 0))
+    {
+        localStorage.alarmaSonido = (new Date().getTime() + 900000);
+        $.modal('<p style="font-weight:bold;font-size:20px;color:yellow;text-align:center;">EL SONIDO ESTA MUY BAJO</p>');
+    }
+}
 
 function actualizar() {
+    
+    var fecha = $('#fecha_caja').val();
 
-    rsv_solicitar('cuenta',{pendientes: 1},function(datos){
+    rsv_solicitar('cuenta',{mesa:$("#id_mesa").val(), pendientes: 1},function(datos){
         
        _ordenes = {};
        
@@ -16,7 +28,7 @@ function actualizar() {
         return;
        }
        
-       if (cmp_cache == JSON.stringify(datos.aux.pendientes)) {
+       if (JSON.stringify(cmp_cache) == JSON.stringify(datos.aux.pendientes)) {
         // No redendizar nada, con el beneficio de:
         // * No alterar el DOM y hacer mas facil Firedebuggear
         // * No procesar innecesariamente
@@ -25,23 +37,23 @@ function actualizar() {
         return;
        }
        
-       cmp_cache = JSON.stringify(datos.aux.pendientes);
+       cmp_cache = datos.aux.pendientes;
     
        $("#pedidos").empty();
        for(x in datos.aux.pendientes)
        {
         _ordenes[x] = datos.aux.pendientes[x];                  
-        cuenta_obtenerVisual($("#pedidos"), x, 0);
+        agregarPedido($("#pedidos"), x, 0);
        }
     
     });
 }
 
 function cuadrarCorte() {
-    var total_a_cuadrar = parseFloat($.trim($("#total_a_cuadrar").val()));
-    var total_efectivo = parseFloat($.trim($("#total_efectivo").val()));
-    var total_pos = parseFloat($.trim($("#total_pos").val()));
-    var total_compras = parseFloat($.trim($("#total_compras").val()));
+    var total_a_cuadrar = parseFloat($("#total_a_cuadrar").val());
+    var total_efectivo = parseFloat($("#total_efectivo").val());
+    var total_pos = parseFloat($("#total_pos").val());
+    var total_compras = parseFloat($("#total_compras").val());
     var total_diferencia = total_a_cuadrar - (total_efectivo + total_pos + total_compras);
     
     $("#total_diferencia").val(total_diferencia.toFixed(2));
@@ -66,13 +78,22 @@ function estadisticas() {
              $("#dsn").html('Sin datos');
          }
          
-         $("#tps").html(datos.aux.tps + "'");
-         $("#tms").html(datos.aux.tms);
+         $("#tps").html(datos.aux.tps + ' minutos');
+         $("#tms").html(datos.aux.tms + ' minutos');
+         
+         var rms = parseFloat(datos.aux.sonido);
+         var sonido = '<span style="color:yellow;">El sonido es muy bajo!</span>';
+         if (rms > 0.25) {
+            sonido = 'Sonido OK';
+         } else {
+            alarmaSonido();
+         }
+         $("#sonido").html( rms + ' ' + sonido );
      });
 }
 
-setInterval(actualizar,1000);
-setInterval(estadisticas,10000);
+setInterval(actualizar,5000);
+setInterval(estadisticas,30000);
 
 function activarAdm()
 {
@@ -104,10 +125,6 @@ $(function(){
             activarAdm();
         }
     }
-    
-    $(document).on('click','.vaciar_cache_caja',function(){
-        cmp_cache = null;
-    });
     
     $(document).on('click','.chk_separar_pedido',function(){
         var orden = $(this).parents('.orden');
@@ -144,19 +161,19 @@ $(function(){
         
         if (tmp_cheques.length > 0) {
             
-            var mesa = prompt("¿Cúal es el número de la nueva mesa?");
+            var mesa = prompt("Â¿CÃºal es el nÃºmero de la nueva mesa?");
         
             if ( !$.isNumeric(mesa) || mesa == 0 )
             {
-                alert('El nuevo número de mesa es inválido.');
+                alert('El nuevo nÃºmero de mesa es invÃ¡lido.');
                 return;
             }
 
-            var mesero = prompt("¿Código del mesero?");
+            var mesero = prompt("Â¿CÃ³digo del mesero?");
         
             if ( !$.isNumeric(mesero) || mesero == 0 )
             {
-                alert('El código de mesero es inválido.');
+                alert('El cÃ³digo de mesero es invÃ¡lido.');
                 return;
             }
             
@@ -191,7 +208,7 @@ $(function(){
            for(x in datos.aux.pendientes)
            {
             _ordenes[x] = datos.aux.pendientes[x];                  
-            cuenta_obtenerVisual($("#destino_historial"), x, 1);
+            agregarPedido($("#destino_historial"), x, 1);
            }
 
         });
@@ -215,34 +232,8 @@ $(function(){
         $("#pestana_cocina").remove();
     }
 
-    $("#btn_rapido_cuenta_cerrar, #btn_rapido_cuenta_tiquete").click(function(){
-        var mesa = $('#id_mesa').val();
-        
-        if ( mesa == "" || mesa == "0" ) {
-           alert('El número de mesa no puede ser "' + mesa + '"');
-           $('#id_mesa').val('').focus();
-	   return;
-	}
-        
-        // Busquemos si tenemos esa cuenta:
-        var orden = $('.orden[id_mesa="' + mesa + '"]');
-        
-        if (orden.length == 0)
-        {
-           alert('El número de mesa "' + mesa + '" no tiene cuenta abierta');
-           $('#id_mesa').val('').focus();
-	   return;
-        }
-        
-        if ($(this).attr('id') == 'btn_rapido_cuenta_cerrar') {
-            orden.find('.cerrar_cuenta').click();
-        } else if ($(this).attr('id') == 'btn_rapido_cuenta_tiquete') {
-            orden.find('.imp_tiquete').click();
-        }
-    });
-    
     $(document).on('click','.abrir_cuenta', function(){
-        if (!confirm('¿Realmente desea abrir nuevamente esta cuenta?'))
+        if (!confirm('Â¿Realmente desea abrir nuevamente esta cuenta?'))
             return;
                        
         var orden = $(this).parents('.orden');
@@ -268,7 +259,7 @@ $(function(){
     
        
     $('#pedidos').on('click','.anular_cuenta', function(){
-        if (!confirm('¿Realmente desea anular esta orden?'))
+        if (!confirm('Â¿Realmente desea anular esta orden?'))
             return;
                        
         var orden = $(this).parents('.orden');
@@ -277,13 +268,13 @@ $(function(){
         var intentos = 0;
         
         while (motivo.length < 3 && intentos < 3) {
-            motivo = prompt('Ingrese el motivo de la anulación.');
+            motivo = prompt('Ingrese el motivo de la anulaciÃ³n.');
             motivo = $.trim(motivo);
             intentos++;
         }
         
         if (motivo == '') {
-            alert('Debe ingresar un motivo para la anulación');
+            alert('Debe ingresar un motivo para la anulaciÃ³n');
             return;
         }
         
@@ -293,74 +284,34 @@ $(function(){
     });
     
     $('#pedidos').on('click','.cerrar_cuenta', function(){
-        if (!confirm('¿Realmente desea cerrar esta cuenta?'))
+        if (!confirm('Â¿Realmente desea cerrar esta cuenta?'))
             return;
    
         var orden = $(this).parents('.orden');
-        var cuenta = orden.attr('cuenta');
            
-        rsv_solicitar('cuenta_cerrar',{mesa: orden.attr('id_mesa'), cuenta: orden.attr('cuenta')},function(datos){});
-         
-         if ($("#habilitar_facturin").is(":checked")) {
-            rsv_solicitar('cuenta',{ cuenta: cuenta, facturacion: '1'},function(datos){
-                for(x in datos.aux.pendientes) {
-                    var xml = crearXmlParaFacturin(datos.aux.pendientes[x], 0, true, true);
-
-                    $.post('http://localhost:40001', {xml:xml}, function(data){alert(data);}, 'text');
-                }
-           });
-         }
+        rsv_solicitar('cuenta_cerrar',{mesa: orden.attr('id_mesa'), cuenta: orden.attr('cuenta')},function(datos){
+    
+         });     
         
     });
 
-    $(document).on('click','.imp_tiquete', function(){        
+    $(document).on('click','.imp_tiquete', function(){
+        if (!confirm('Â¿Realmente desea imprimir este tiquete?'))
+            return;
+        
         var orden = $(this).parents('.orden');
         
         rsv_solicitar('cuenta',{ cuenta: orden.attr('cuenta'), facturacion: '1'},function(datos){
             for(x in datos.aux.pendientes)
             {
                 var html = crearTiquete(datos.aux.pendientes[x]);
-                rsv_solicitar('tiquete_pendientes',{imprimir: html , cuenta: orden.attr('cuenta'), estacion: 'tiquetes'},function(datos){});
+                rsv_solicitar('tiquete_pendientes',{imprimir: html , cuenta: orden.attr('cuenta')},function(datos){});
             }
        });
     });
     
-    $(document).on('contextmenu','.imp_fiscal, .imp_factura', function(event){
-        event.preventDefault();
-        return false;
-    });
-    
-    $(document).on('mousedown','.imp_factura', function(event){        
-        event.preventDefault();
-        var orden = $(this).parents('.orden');
-        
-        rsv_solicitar('cuenta',{ cuenta: orden.attr('cuenta'), facturacion: '1'},function(datos){
-            for(x in datos.aux.pendientes)
-            {
-                var xml = crearXmlParaFacturin(datos.aux.pendientes[x], 0, (event.which == 1), (event.which == 1));
-                
-                $.post('http://localhost:40001', {xml:xml}, function(data){alert(data)}, 'text');
-            }
-       });
-       return false;
-    });
-    
-    $(document).on('mousedown','.imp_fiscal', function(event){        
-        event.preventDefault();
-        var orden = $(this).parents('.orden');
-        
-        rsv_solicitar('cuenta',{ cuenta: orden.attr('cuenta'), facturacion: '1'},function(datos){
-            for(var x in datos.aux.pendientes)
-            {
-                var xml = crearXmlParaFacturin(datos.aux.pendientes[x], 1, (event.which == 1), false);
-                $.post('http://localhost:40001', {xml:xml}, function(data){alert(data);}, 'text');
-            }
-       });
-       return false;
-    });
-
     $(document).on('click','.quitar_propina', function(){
-        if (!confirm('¿Realmente desea quitarle los sueños y esperanzas a los empleados?'))
+        if (!confirm('Â¿Realmente desea quitarle el sustento a los empleados?'))
             return;
         
         var motivo = '';
@@ -378,13 +329,13 @@ $(function(){
         }
 
         var orden = $(this).parents('.orden');
-        rsv_solicitar('cuenta_modificar',{cuenta: orden.attr('cuenta'), campo: 'flag_nopropina', valor: '1', motivo: motivo},function(datos){
+        rsv_solicitar('cuenta_modificar',{mesa: orden.attr('id_mesa'), cuenta: orden.attr('cuenta'), campo: 'flag_nopropina', valor: '1', motivo: motivo},function(datos){
         });
     });
     
 
     $(document).on('click','.quitar_iva', function(){
-        if (!confirm("¿Hacer esta cuenta exenta de I.V.A.?\nNota: si agrega más productos deberá ejecutar esta opción nuevamente."))
+        if (!confirm("Â¿Hacer esta cuenta exenta de I.V.A.?\nNota: si agrega mÃ¡s productos deberÃ¡ ejecutar esta opciÃ³n nuevamente."))
             return;
         
         var motivo = '';
@@ -402,7 +353,7 @@ $(function(){
         }
 
         var orden = $(this).parents('.orden');
-        rsv_solicitar('cuenta_modificar',{cuenta: orden.attr('cuenta'), campo: 'flag_exento', valor: '1', motivo: motivo},function(datos){
+        rsv_solicitar('cuenta_modificar',{mesa: orden.attr('id_mesa'), cuenta: orden.attr('cuenta'), campo: 'flag_exento', valor: '1', motivo: motivo},function(datos){
         });
     });
 
@@ -412,8 +363,8 @@ $(function(){
         _t_id_pedido = pedido.attr('id_pedido');
         
         var buffer = '<div class="contenedor_edicion_pedido" rel="'+_t_id_pedido+'">';
-        buffer += '<h1>Edición de pedido</h1><p>ID de pedido: '+_t_id_pedido+'</p>';
-        buffer += '<h1>Cambio de precio</h1><p>Nuevo precio: <input type="text" style="width:75px;" value="0.00" id="pedido_valor_nuevo_precio" /> Razón: <input type="text" style="width:450px;font-size:0.9em;" value="" id="pedido_valor_nuevo_precio_razon" /><button id="pedido_cambiar_precio">Cambiar</button></p>';
+        buffer += '<h1>EdiciÃ³n de pedido</h1><p>ID de pedido: '+_t_id_pedido+'</p>';
+        buffer += '<h1>Cambio de precio</h1><p>Nuevo precio: <input type="text" style="width:75px;" value="0.00" id="pedido_valor_nuevo_precio" /> RazÃ³n: <input type="text" style="width:450px;font-size:0.9em;" value="" id="pedido_valor_nuevo_precio_razon" /><button id="pedido_cambiar_precio">Cambiar</button></p>';
         buffer += '</div>';
         $.modal(buffer);    
     });    
@@ -422,20 +373,20 @@ $(function(){
     $('#pedidos').on('click','.cancelar_pedido', function(){
         var orden = $(this).parents('.orden');
         
-        if (!confirm('¿Realmente desea quitar este producto de la mesa #'+orden.attr('id_mesa')+'?'))
+        if (!confirm('Â¿Realmente desea quitar este producto de la mesa #'+orden.attr('id_mesa')+'?'))
             return;
         
         var motivo = '';
         var intentos = 0;
         
         while (motivo.length < 3 && intentos < 3) {
-            motivo = prompt('Ingrese el motivo de la eliminación.');
+            motivo = prompt('Ingrese el motivo de la eliminaciÃ³n.');
             motivo = $.trim(motivo);
             intentos++;
         }
         
         if (motivo == '') {
-            alert('Debe ingresar un motivo para la eliminación');
+            alert('Debe ingresar un motivo para la eliminaciÃ³n');
             return;
         }
         
@@ -445,6 +396,17 @@ $(function(){
             // VOID
         });
     });    
+    
+
+    $('#pedidos').on('click','.imp_factura', function(){
+        if (!confirm('Â¿Realmente desea imprimir esta factura?'))
+            return;
+    });
+    
+    $('#pedidos').on('click','.imp_ccf', function(){
+        if (!confirm('Â¿Realmente desea imprimir este credito fiscal?'))
+            return;
+    });
 
     $('#inventario').click(function(){
         
@@ -465,14 +427,14 @@ $(function(){
     });    
         
     $('#pedidos').on('click', '.cambio_mesa', function() {
-        if (!confirm("¿Desea mover los pedidos de esta cuenta a otra?\nNota: si la mesa ya existe entonces se combinarán los pedidos"))
+        if (!confirm("Â¿Desea mover los pedidos de esta cuenta a otra?\nNota: si la mesa ya existe entonces se combinarÃ¡n los pedidos"))
             return;
         
-        var mesa = prompt("¿Cúal es el número de la nueva mesa?");
+        var mesa = prompt("Â¿CÃºal es el nÃºmero de la nueva mesa?");
         
         if ( !$.isNumeric(mesa) || mesa == 0 )
         {
-            alert('El nuevo número de mesa es inválido.');
+            alert('El nuevo nÃºmero de mesa es invÃ¡lido.');
             return;
         }
         
@@ -491,7 +453,7 @@ $(function(){
             buffer += '<h2>General</h2>';
             buffer += '<form id="datos_compra">';
             buffer += '<table class="ancha">';
-            buffer += '<tr><th>Comprado a</th><th>Descripción</th><th>Precio</th><th>Pagado via</th></tr>';
+            buffer += '<tr><th>Comprado a</th><th>DescripciÃ³n</th><th>Precio</th><th>Pagado via</th></tr>';
             buffer += '<tr><td><input type="text" name="empresa" value="" /></td><td><input type="text" name="descripcion" value="" /></td><td><input type="text" name="precio" value="0.00" /></td><td><select name="via"><option value="caja">Caja</option><option value="cheque">Cheque</option></select></td></tr>';
             buffer += '</table>';
             buffer += '</form>';
@@ -539,32 +501,31 @@ $(function(){
         });
     });
     
-    $('#ver_total').click(function(){        
-        if ( prompt( 'Ingrese contraseña' ) !== '666' )
+    $('#ver_total').click(function(){
+        if ( prompt( 'Ingrese contraseÃ±a' ) !== '666' )
         {
-            alert ( 'Contraseña incorrecta!' );
+            alert ( 'ContraseÃ±a incorrecta!' );
             return;
         }
-
+        
         rsv_solicitar('cortez',{fecha: $('#fecha_caja').val()},function(datos){
             var buffer = '';
-            buffer += '<p>Total del día: $' + datos.aux.total + ' - <span style="color:#666;">solo cuentas cerradas</span></p>';
+            buffer += '<p>Total del dÃ­a: $' + datos.aux.total + ' - <span style="color:#666;">solo cuentas cerradas</span></p>';
             buffer += '<p>Total posible: $' + datos.aux.total_posible + ' - <span style="color:#666;">cuentas cerradas + abiertas</span></p>';
             buffer += '<p>Total pendiente: $' + datos.aux.total_pendiente + ' - <span style="color:#666;">solo cuentas abiertas</span></p>';
             buffer += '<p>Total anulado: $' + datos.aux.total_anulado + ' - <span style="color:#666;">solo cuentas anuladas</span></p>';
             buffer += '<p>Total eliminado: $' + datos.aux.total_cancelado + ' - <span style="color:#666;">solo pedidos eliminados</span></p>';
             buffer += '<p>Total compras: $' + datos.aux.total_compras + ' - <span style="color:#666;">solo dinero gastado de caja en compras</span></p>';
-            buffer += '<p style="color:yellow;">Total a cuadrar: $' + datos.aux.total_cuadrar + ' - <span style="color:#666;">solo dinero desde el último corte Z</span></p>';
-            buffer += '<p style="color:yellow;">Total compras a cuadrar: $' + datos.aux.total_compras_cuadrar + ' - <span style="color:#666;">solo compras desde el último corte Z</span></p>';
+            buffer += '<p style="color:yellow;">Total a cuadrar: $' + datos.aux.total_cuadrar + ' - <span style="color:#666;">solo dinero desde el Ãºltimo corte Z</span></p>';
+            buffer += '<p style="color:yellow;">Total compras a cuadrar: $' + datos.aux.total_compras_cuadrar + ' - <span style="color:#666;">solo compras desde el Ãºltimo corte Z</span></p>';
             
             buffer += '<hr /><h1>Corte Z</h1>';
-            buffer += '<table class="ancha">';
-            buffer += '<tr>';
-            buffer += '<td>';
-                
             if (parseFloat(datos.aux.total_pendiente) > 0.00) {
                 buffer += '<p style="color:red;">Error: <span style="color:#666;">no puede hacer Corte Z si hay cuentas abiertas</span></p>';
             } else {
+                buffer += '<table class="ancha">';
+                buffer += '<tr>';
+                buffer += '<td>';
                 buffer += '<form id="frm_cortez">';
                 buffer += '<table>';
                 buffer += '<tr><td>Total a cuadrar:</td><td><input id="total_a_cuadrar" name="total_a_cuadrar" type="text" readonly="readonly" value="'+datos.aux.total_cuadrar+'" /></td></tr>';
@@ -575,24 +536,24 @@ $(function(){
                 buffer += '<tr><td>En caja:</td><td><input id="total_caja" name="total_caja" type="text" value="0.00" /></td></tr>';
                 buffer += '</table>';
                 buffer += '</form>';
+                buffer += '</td>';
+                buffer += '<td style="vertical-align:top;">';
+                buffer += '<h1>Compras</h1>';
+                buffer += '<div id="contenedor_compras">';
+                buffer += '<table class="ancha estandar bordes">';
+                buffer += '<tr><th>Empresa</th><th>DescripciÃ³n</th><th>Precio</th></tr>';
+                for(compra in datos.aux.compras)
+                {
+                    buffer += '<tr><td>'+datos.aux.compras[compra].empresa+'</td><td>'+datos.aux.compras[compra].descripcion+'</td><td>$'+datos.aux.compras[compra].precio+'</td></tr>';
+                }
+                buffer += '</table>';
+                buffer += '</div>';
+                buffer += '</td>';
+                buffer += '</tr>';
+                buffer += '</table>';
+                
                 buffer += '<button id="cortar">Cortar</button>';
             }
-            
-            buffer += '</td>';
-            buffer += '<td style="vertical-align:top;">';
-            buffer += '<h1>Compras</h1>';
-            buffer += '<div id="contenedor_compras">';
-            buffer += '<table class="ancha estandar bordes">';
-            buffer += '<tr><th>Empresa</th><th>Descripción</th><th>Precio</th></tr>';
-            for(compra in datos.aux.compras)
-            {
-                buffer += '<tr><td>'+datos.aux.compras[compra].empresa+'</td><td>'+datos.aux.compras[compra].descripcion+'</td><td>$'+datos.aux.compras[compra].precio+'</td></tr>';
-            }
-            buffer += '</table>';
-            buffer += '</div>';
-            buffer += '</td>';
-            buffer += '</tr>';
-            buffer += '</table>';
             
             $.modal(buffer);
         });
@@ -620,7 +581,7 @@ $(function(){
                 corte.append('<div>'+$("#contenedor_compras").html()+'</div>');
                 $.modal.close();
             } else {
-                alert('El corte no fue exitoso!, ¿falta de filo? ');
+                alert('El corte no fue exitoso!, Â¿falta de filo? ');
             }
         }); 
     });
@@ -629,11 +590,11 @@ $(function(){
         var id_pedido = $(this).parents('.contenedor_edicion_pedido').attr('rel');
         
         if ($("#pedido_valor_nuevo_precio_razon").val() == "" ) {
-            alert("Debe ingresar una razón para hacer el cambio de precio.\nPlantilla: XXX autorizó por YYY\nEj.: Franklin autorizó por descontento del cliente");
+            alert("Debe ingresar una razÃ³n para hacer el cambio de precio.\nPlantilla: XXX autorizÃ³ por YYY\nEj.: Franklin autorizÃ³ por descontento del cliente");
             return;
         }
         
-        if (!confirm('¿Realmente desea del precio del pedido #'+id_pedido+' a '+ $('#pedido_valor_nuevo_precio').val() +'?'))
+        if (!confirm('Â¿Realmente desea del precio del pedido #'+id_pedido+' a '+ $('#pedido_valor_nuevo_precio').val() +'?'))
             return;
         
         rsv_solicitar('pedido_modificar',{pedido: id_pedido, campo: 'precio_grabado', valor:  $('#pedido_valor_nuevo_precio').val(), nota: $('#pedido_valor_nuevo_precio_razon').val()},function(datos){
@@ -645,7 +606,7 @@ $(function(){
 
     $('#historial_cortez').click(function(){
         rsv_solicitar('cortez',{historial: true},function(datos){
-            var buffer = '<table class="estandar ancha bordes resalte">';
+            var buffer = '<table class="estandar ancha bordes">';
             buffer += '<tr><th>Fecha</th><th>Total</th><th>Diferencia</th><th>Efectivo</th><th>POS</th><th>Compras</th><th>Caja</th><th>Estado</th></tr>';
             for(y in datos.aux.historial)
             {

@@ -31,16 +31,16 @@ function timeSince(date) {
 }
 
 function Beep() {
-    $('#beep').get(0).play();
+    var sound = $('#beep')[0];
+    sound.pause();
+    sound.play();
 }
 
 function agregarPedido(grupo)
 {
-    var orden = $('<div class="orden" />');
+    var orden = $('<div class="orden despachar" />');
     
     orden.append('<div style="height:1em;"><span class="grupo"><span class="mesa">#'+_ordenes[grupo][0].ID_mesa+ ':' + _ordenes[grupo][0].nombre_mesero + '</span></span> <span class="tiempo" /></div>');
-    orden.append('<hr />');
-    orden.append('<button class="despachar" style="width:100%;">DESPACHAR</button>');
     orden.append('<hr />');
     orden.attr('id','o_'+grupo);
     orden.attr('id_orden',_ordenes[grupo][0].ID_orden);
@@ -115,7 +115,7 @@ $(function(){
     
     $('.despachar').live('click', function(){
         
-        var ID_orden = $(this).parents('.orden').attr('id_orden');
+        var ID_orden = $(this).attr('id_orden');
         if (!confirm('Desea despachar esta orden?'))
             return;
         

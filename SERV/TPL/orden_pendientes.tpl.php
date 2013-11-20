@@ -22,10 +22,10 @@ $CRITERIO_BASE = 't0.`flag_elaborado` = 0';
 
 if (isset($_POST['ghost']))
 {
-    $CRITERIO_BASE = '(t0.`flag_elaborado` = 0 OR fechahora_entregado > (NOW() - INTERVAL 15 MINUTE))';
+    $CRITERIO_BASE = '(t0.`flag_elaborado` = 0 OR fechahora_entregado > (NOW() - INTERVAL 5 MINUTE))';
 }
 
-$campos = 'SELECT t0.ID_mesero, t4.usuario AS "nombre_mesero", t0.`fechahora_pedido` , unix_timestamp(t0.`fechahora_pedido`) AS "fechahora_pedido_uts" , t0.`fechahora_entregado` , unix_timestamp(t0.`fechahora_entregado`) AS "fechahora_entregado_uts" , t0.`fechahora_pagado` , t0.`flag_pagado` , t0.`flag_elaborado` , t0.`metodo_pago` , t0.`ID_orden` , t0.`ID_mesa` , t0.`ID_usuario` , `ID_pedido` , `ID_producto` , `precio_grabado` , t2.`nombre` AS "nombre_producto", `tmpID`, `flag_cancelado`, t2.ID_grupo, t3.descripcion AS "grupo_desc"
+$campos = 'SELECT t0.ID_mesero, t4.usuario AS "nombre_mesero", t0.`fechahora_pedido` , unix_timestamp(t0.`fechahora_pedido`) AS "fechahora_pedido_uts" , t0.`fechahora_entregado` , unix_timestamp(t0.`fechahora_entregado`) AS "fechahora_entregado_uts" , t0.`fechahora_pagado` , t0.`flag_pagado` , t0.`flag_elaborado`, t0.`flag_elaborado` AS "flag_despachado", t0.`metodo_pago` , t0.`ID_orden` , t0.`ID_mesa` , t0.`ID_usuario` , `ID_pedido` , `ID_producto` , `precio_grabado` , t2.`nombre` AS "nombre_producto", `tmpID`, `flag_cancelado`, t2.ID_grupo, t3.descripcion AS "grupo_desc"
 FROM `ordenes` AS t0
 LEFT JOIN `pedidos` AS t1
 USING ( ID_orden )
